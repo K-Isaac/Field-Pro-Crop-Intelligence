@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex,nofollow" />
+<title>FieldLens Admin</title>
+<style>
+:root{--bg:#07110d;--panel:#0d1c16;--p2:#12261e;--border:#1e3b2f;--text:#eaf5ef;--muted:#8aa698;--em:#10b981;--lime:#a3e635;--cyan:#22d3ee;--amber:#f59e0b;--red:#ef4444}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+.hidden{display:none!important}
+.login{max-width:380px;margin:12vh auto;padding:0 16px;text-align:center}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px}
+.card+.card{margin-top:16px}
+h2{margin:0 0 4px}h3.t{margin:0 0 12px;font-size:12px;text-transform:uppercase;letter-spacing:.9px;color:var(--lime)}
+input,select,textarea{width:100%;margin-top:5px;background:#07120e;color:var(--text);border:1px solid var(--border);border-radius:9px;padding:9px 11px;font:inherit}
+label{display:block;font-size:12px;color:var(--muted);font-weight:700;margin-top:12px}
+.btn{border:1px solid var(--border);background:var(--p2);color:var(--text);padding:9px 14px;border-radius:9px;font-weight:700;cursor:pointer;font-size:13px}
+.btn:hover{border-color:var(--lime)}.btn.pri{background:var(--em);color:#03150c;border:0}.btn.danger{background:var(--red);color:#fff;border:0}
+.btn.sm{padding:5px 10px;font-size:12px}
+.layout{display:grid;grid-template-columns:210px 1fr;min-height:100vh}
+@media(max-width:820px){.layout{grid-template-columns:1fr}}
+aside{background:#091812;border-right:1px solid var(--border);padding:16px;position:sticky;top:0;height:100vh}
+@media(max-width:820px){aside{position:static;height:auto;display:flex;flex-wrap:wrap;gap:6px;align-items:center}}
+aside .brand{font-weight:800;font-size:17px;margin-bottom:14px}aside .brand span{color:var(--lime)}
+.tab{display:block;width:100%;text-align:left;background:none;border:0;color:var(--muted);padding:9px 10px;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px}
+.tab.on{background:var(--em);color:#04130c}.tab:hover:not(.on){color:var(--lime)}
+@media(max-width:820px){.tab{width:auto}}
+main{padding:22px;max-width:1100px;width:100%}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--p2);border:1px solid var(--border);border-radius:12px;padding:13px}
+.kpi span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}.kpi strong{display:block;font-size:22px;margin-top:2px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}@media(max-width:700px){.g3{grid-template-columns:1fr 1fr}}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{color:var(--muted);text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.6px;padding:8px;border-bottom:1px solid var(--border)}
+td{padding:8px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle}
+tr.click:hover{background:var(--p2);cursor:pointer}
+td img{width:42px;height:42px;border-radius:7px;object-fit:cover;display:block}
+.pill{font-size:11px;font-weight:800;padding:3px 8px;border-radius:99px;background:rgba(16,185,129,.14);color:var(--em);border:1px solid rgba(16,185,129,.3)}
+.pill.bad{background:rgba(239,68,68,.14);color:#fca5a5;border-color:rgba(239,68,68,.4)}.pill.warn{background:rgba(245,158,11,.14);color:#fcd34d;border-color:rgba(245,158,11,.4)}
+.muted{color:var(--muted)}
+.bars{display:flex;align-items:flex-end;gap:5px;height:120px;margin-top:6px}
+.bars div{flex:1;background:linear-gradient(180deg,var(--lime),var(--em));border-radius:4px 4px 0 0;min-height:2px;position:relative}
+.bars div span{position:absolute;top:-16px;left:0;right:0;text-align:center;font-size:10px;color:var(--muted)}
+.bl{display:flex;gap:5px;font-size:10px;color:var(--muted)}.bl span{flex:1;text-align:center}
+.log{font-family:ui-monospace,Menlo,monospace;font-size:12px;max-height:520px;overflow:auto;background:#040a07;border:1px solid var(--border);border-radius:10px;padding:10px}
+.log div{padding:3px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0f3a28;border:1px solid var(--em);padding:10px 16px;border-radius:10px;z-index:99;display:none}
+#toast.err{background:#3a0f0f;border-color:var(--red)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:grid;place-items:center;z-index:90;padding:16px}
+.modal .card{max-width:760px;width:100%;max-height:90vh;overflow:auto}
+.switch{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:13px}.switch input{width:auto;margin:0}
+</style>
+</head>
+<body>
+
+<div id="loginView" class="login hidden">
+  <div class="card">
+    <div style="font-size:34px">🛡️</div>
+    <h2>FieldLens Admin</h2>
+    <p class="muted" style="margin:4px 0 12px">Sign in to manage the live platform.</p>
+    <input type="password" id="pw" placeholder="Admin password" autocomplete="current-password" />
+    <button class="btn pri" style="width:100%;margin-top:12px" id="loginBtn">Sign in</button>
+    <div id="loginErr" style="color:#fca5a5;margin-top:10px;font-size:13px"></div>
+  </div>
+</div>
+
+<div id="appView" class="layout hidden">
+  <aside>
+    <div class="brand">🌿 Field<span>Lens</span> Admin</div>
+    <button class="tab on" data-tab="overview">📊 Overview</button>
+    <button class="tab" data-tab="scans">🔬 Scans</button>
+    <button class="tab" data-tab="engine">🔑 AI engine</button>
+    <button class="tab" data-tab="rules">🎚️ Alarm rules</button>
+    <button class="tab" data-tab="access">🚦 Access &amp; limits</button>
+    <button class="tab" data-tab="site">🌐 Site &amp; sharing</button>
+    <button class="tab" data-tab="feedback">💬 Feedback</button>
+    <button class="tab" data-tab="logs">🖥️ Logs</button>
+    <button class="tab" data-tab="security">🔒 Security</button>
+    <div style="margin-top:20px"><a class="btn sm" href="/" target="_blank" style="text-decoration:none;display:inline-block">Open public app ↗</a>
+      <button class="btn sm" id="logoutBtn" style="margin-top:8px">Sign out</button></div>
+  </aside>
+  <main>
+    <!-- Overview -->
+    <section id="t_overview">
+      <div id="warnBox"></div>
+      <div class="kpis" id="kpis"></div>
+      <div class="grid2">
+        <div class="card"><h3 class="t">Scans — last 14 days</h3><div id="chart"></div></div>
+        <div class="card"><h3 class="t">Top crops scanned</h3><div id="topCrops" class="muted">—</div></div>
+      </div>
+    </section>
+
+    <!-- Scans -->
+    <section id="t_scans" class="hidden">
+      <div class="card">
+        <h3 class="t">All scans (every user)</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <input id="sq" placeholder="Search crop / notes…" style="flex:2;min-width:160px;margin:0" />
+          <select id="sstatus" style="flex:1;min-width:130px;margin:0"><option value="">All statuses</option><option value="ok">OK</option><option value="error">Errors</option><option value="not_plant">Not a plant</option></select>
+          <label class="switch" style="margin:0"><input type="checkbox" id="sdanger" /> Danger only</label>
+          <button class="btn" id="sgo">Search</button>
+          <a class="btn" href="/api/admin/export.csv" style="text-decoration:none">⬇ CSV</a>
+        </div>
+        <div style="overflow-x:auto;margin-top:12px"><table><thead><tr><th></th><th>Time</th><th>Crop</th><th>Health</th><th>Status</th><th>Lang</th><th>ms</th></tr></thead><tbody id="scanRows"></tbody></table></div>
+        <div style="display:flex;justify-content:space-between;margin-top:10px"><button class="btn sm" id="prevP">← Prev</button><span id="pageInfo" class="muted"></span><button class="btn sm" id="nextP">Next →</button></div>
+      </div>
+    </section>
+
+    <!-- AI engine -->
+    <section id="t_engine" class="hidden">
+      <div class="card">
+        <h3 class="t">AI vision engine &amp; API keys</h3>
+        <label>Active provider</label>
+        <select id="ai_provider"><option value="openai">OpenAI Vision</option><option value="gemini">Google Gemini Vision</option></select>
+        <div class="grid2">
+          <div><label>OpenAI model</label><input id="openai_model" /></div>
+          <div><label>Gemini model</label><input id="gemini_model" /></div>
+        </div>
+        <label>OpenAI API key <span id="oaiStatus" class="muted"></span></label>
+        <input type="password" id="openai_api_key" placeholder="Paste a key to set or replace it" autocomplete="off" />
+        <label>Gemini API key <span id="gemStatus" class="muted"></span></label>
+        <input type="password" id="gemini_api_key" placeholder="Paste a key to set or replace it" autocomplete="off" />
+        <p class="muted" style="font-size:12px">Keys are never shown in full and are never sent to visitors. A key set here overrides the server environment variable.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <button class="btn pri" data-save="engine">💾 Save</button>
+          <button class="btn" id="testAi">⚡ Test connection</button>
+          <button class="btn sm" data-clear="openai">Remove OpenAI key</button>
+          <button class="btn sm" data-clear="gemini">Remove Gemini key</button>
+        </div>
+        <div id="testOut" style="margin-top:10px;font-size:13px"></div>
+      </div>
+    </section>
+
+    <!-- Rules -->
+    <section id="t_rules" class="hidden">
+      <div class="card">
+        <h3 class="t">Danger-alarm thresholds &amp; calibration</h3>
+        <p class="muted" style="margin-top:0">Applied to every scan after the AI answers. A scan below any limit triggers the red alarm for the farmer.</p>
+        <div class="g3">
+          <div><label>Min health score %</label><input type="number" id="min_health_score" /></div>
+          <div><label>Min water hydration %</label><input type="number" id="min_water_pct" /></div>
+          <div><label>Min nitrogen %</label><input type="number" id="min_nitrogen_pct" /></div>
+          <div><label>Min phosphorus %</label><input type="number" id="min_phosphorus_pct" /></div>
+          <div><label>Min potassium %</label><input type="number" id="min_potassium_pct" /></div>
+          <div><label>Chlorophyll gain ×</label><input type="number" step="0.05" id="chlorophyll_sensitivity" /></div>
+        </div>
+        <label>Region context given to the AI</label><input id="region_context" />
+        <button class="btn pri" style="margin-top:14px" data-save="rules">💾 Save rules</button>
+      </div>
+    </section>
+
+    <!-- Access -->
+    <section id="t_access" class="hidden">
+      <div class="card">
+        <h3 class="t">Access, limits &amp; cost protection</h3>
+        <div class="g3">
+          <div><label>Scans per visitor / hour</label><input type="number" id="scans_per_ip_per_hour" /></div>
+          <div><label>Total scans per day (all users)</label><input type="number" id="global_scans_per_day" /></div>
+          <div><label>Max photo size (MB)</label><input type="number" id="max_upload_mb" /></div>
+        </div>
+        <div class="switch"><input type="checkbox" id="maintenance_mode" /> <b>Maintenance mode</b> <span class="muted">— pauses scanning for everyone</span></div>
+        <button class="btn pri" style="margin-top:14px" data-save="access">💾 Save limits</button>
+      </div>
+      <div class="card">
+        <h3 class="t">Data retention</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end">
+          <div><label style="margin-top:0">Delete scans older than (days)</label><input type="number" id="purgeDays" value="90" style="width:120px" /></div>
+          <button class="btn danger" id="purgeBtn">Purge old scans</button>
+          <button class="btn danger" id="purgeAll">Delete ALL scans</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Site -->
+    <section id="t_site" class="hidden">
+      <div class="grid2">
+        <div class="card">
+          <h3 class="t">Public site</h3>
+          <label>Platform name</label><input id="public_name" />
+          <label>Contact email (shown in footer)</label><input id="contact_email" />
+          <label>Announcement banner (blank = none)</label><textarea id="announcement" rows="2"></textarea>
+          <button class="btn pri" style="margin-top:14px" data-save="site">💾 Save site</button>
+        </div>
+        <div class="card" style="text-align:center">
+          <h3 class="t">Share the platform</h3>
+          <img id="qrImg" alt="QR" style="width:210px;height:210px;background:#fff;border-radius:12px;padding:8px" />
+          <div id="siteUrl" style="font-family:monospace;color:var(--cyan);margin:10px 0;word-break:break-all"></div>
+          <button class="btn" id="copyUrl">📋 Copy link</button>
+          <p class="muted" style="font-size:12px">Print this QR on posters, cooperatives and extension-office walls — farmers scan it and the app opens instantly.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Feedback -->
+    <section id="t_feedback" class="hidden"><div class="card"><h3 class="t">Farmer feedback</h3><div id="fbList" class="muted">—</div></div></section>
+
+    <!-- Logs -->
+    <section id="t_logs" class="hidden"><div class="card"><h3 class="t">System log <button class="btn sm" id="refLogs" style="float:right">Refresh</button> <button class="btn sm" id="clrLogs" style="float:right;margin-right:6px">Clear</button></h3><div id="logBox" class="log"></div></div></section>
+
+    <!-- Security -->
+    <section id="t_security" class="hidden">
+      <div class="card" style="max-width:480px">
+        <h3 class="t">Change admin password</h3>
+        <label>Current password</label><input type="password" id="curPw" autocomplete="current-password" />
+        <label>New password (10+ characters)</label><input type="password" id="newPw" autocomplete="new-password" />
+        <button class="btn pri" style="margin-top:14px" id="chgPw">Update password</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="toast"></div>
+<div id="modal" class="modal hidden"><div class="card" id="modalBody"></div></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(path, opts = {}) {
+  const o = {credentials: 'same-origin', ...opts, headers: {'X-FL-Admin': '1', ...(opts.body ? {'Content-Type': 'application/json'} : {}), ...(opts.headers || {})}};
+  const r = await fetch(path, o);
+  const d = await r.json().catch(() => ({}));
+  if (r.status === 401 && !path.includes('login')) { show(false); throw new Error('Session expired'); }
+  if (!r.ok) throw new Error(d.error || 'Request failed');
+  return d;
+}
+function toast(m, err) { const t = $('toast'); t.textContent = m; t.className = err ? 'err' : ''; t.style.display = 'block'; clearTimeout(toast.t); toast.t = setTimeout(() => t.style.display = 'none', 3500); }
+const fmt = ts => new Date(ts * 1000).toLocaleString();
+function show(inApp, configured = true) {
+  $('appView').classList.toggle('hidden', !inApp); $('loginView').classList.toggle('hidden', inApp);
+  if (!configured) $('loginErr').textContent = 'Admin is disabled: set the ADMIN_PASSWORD environment variable on the server.';
+}
+
+/* ---------- auth ---------- */
+async function boot() {
+  const s = await (await fetch('/api/admin/session')).json();
+  if (s.signed_in) { show(true); loadTab('overview'); } else show(false, s.configured);
+}
+$('loginBtn').onclick = async () => {
+  try { await api('/api/admin/login', {method: 'POST', body: JSON.stringify({password: $('pw').value})}); $('pw').value = ''; $('loginErr').textContent = ''; show(true); loadTab('overview'); }
+  catch (e) { $('loginErr').textContent = e.message; }
+};
+$('pw').onkeydown = e => { if (e.key === 'Enter') $('loginBtn').click(); };
+$('logoutBtn').onclick = async () => { await api('/api/admin/logout', {method: 'POST', body: '{}'}).catch(() => {}); show(false); };
+
+/* ---------- tabs ---------- */
+let tab = 'overview';
+document.querySelectorAll('.tab').forEach(b => b.onclick = () => loadTab(b.dataset.tab));
+function loadTab(t) {
+  tab = t;
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+  document.querySelectorAll('main > section').forEach(s => s.classList.toggle('hidden', s.id !== 't_' + t));
+  ({overview: loadOverview, scans: () => { page = 0; loadScans(); }, engine: loadSettings, rules: loadSettings, access: loadSettings,
+    site: () => { loadSettings(); loadSite(); }, feedback: loadFeedback, logs: loadLogs, security: () => {}})[t]();
+}
+
+/* ---------- overview ---------- */
+async function loadOverview() {
+  const d = await api('/api/admin/overview').catch(e => toast(e.message, true)); if (!d) return;
+  $('warnBox').innerHTML = (!d.ai_ready ? `<div class="card" style="border-color:var(--red);margin-bottom:16px">🚨 <b>No AI API key is configured for ${esc(d.provider)}.</b> Visitors cannot scan. Add one in <a href="#" onclick="loadTab('engine');return false" style="color:var(--lime)">AI engine</a>.</div>` : '')
+    + (d.maintenance ? `<div class="card" style="border-color:var(--amber);margin-bottom:16px">🛠️ Maintenance mode is ON — scanning is paused.</div>` : '');
+  const helpful = d.feedback.total ? Math.round(100 * d.feedback.helpful / d.feedback.total) + '%' : '—';
+  const k = [['Total scans', d.total], ['Last 24h', `${d.last_24h} / ${d.daily_cap}`], ['Last 7 days', d.last_7d], ['Unique devices', d.devices],
+    ['Danger alarms', d.danger], ['Errors', d.errors], ['Not-a-plant', d.not_plant], ['Avg latency', d.avg_latency_ms + ' ms'],
+    ['Avg health', d.avg_health], ['Helpful votes', helpful], ['Engine', d.model], ['Photo storage', d.disk_mb + ' MB']];
+  $('kpis').innerHTML = k.map(([a, b]) => `<div class="kpi"><span>${a}</span><strong style="${a === 'Engine' ? 'font-size:15px' : ''}">${esc(b)}</strong></div>`).join('');
+  const max = Math.max(1, ...d.daily.map(x => x.count));
+  $('chart').innerHTML = d.daily.length ? `<div class="bars">${d.daily.map(x => `<div style="height:${Math.round(100 * x.count / max)}%"><span>${x.count}</span></div>`).join('')}</div><div class="bl">${d.daily.map(x => `<span>${esc(x.day.slice(5))}</span>`).join('')}</div>` : '<span class="muted">No scans yet.</span>';
+  $('topCrops').innerHTML = d.top_crops.length ? `<table><tr><th>Crop</th><th>Scans</th><th>Avg health</th></tr>${d.top_crops.map(c => `<tr><td>${esc(c.plant)}</td><td>${c.count}</td><td>${c.avg_health}</td></tr>`).join('')}</table>` : 'No scans yet.';
+}
+
+/* ---------- scans ---------- */
+let page = 0, total = 0; const PS = 25;
+async function loadScans() {
+  const p = new URLSearchParams({limit: PS, offset: page * PS, q: $('sq').value, status: $('sstatus').value, danger: $('sdanger').checked ? 1 : 0});
+  const d = await api('/api/admin/scans?' + p).catch(e => toast(e.message, true)); if (!d) return;
+  total = d.total; window._scans = Object.fromEntries(d.scans.map(s => [s.id, s]));
+  $('scanRows').innerHTML = d.scans.map(s => { const a = s.analysis;
+    return `<tr class="click" data-id="${esc(s.id)}"><td><img src="${esc(s.image_url)}" alt=""></td><td>${fmt(s.created_at)}</td><td>${esc(a?.plant_name || s.crop_hint || '—')}</td><td>${a ? a.health_score : '—'}${a?.danger_alarm ? ' <span class="pill bad">DANGER</span>' : ''}</td><td><span class="pill ${s.status === 'ok' ? '' : s.status === 'error' ? 'bad' : 'warn'}">${esc(s.status)}</span></td><td>${esc(s.lang)}</td><td>${s.latency_ms}</td></tr>`; }).join('') || '<tr><td colspan="7" class="muted">No scans match.</td></tr>';
+  $('pageInfo').textContent = `${total ? page * PS + 1 : 0}–${Math.min(total, (page + 1) * PS)} of ${total}`;
+}
+$('sgo').onclick = () => { page = 0; loadScans(); };
+$('prevP').onclick = () => { if (page > 0) { page--; loadScans(); } };
+$('nextP').onclick = () => { if ((page + 1) * PS < total) { page++; loadScans(); } };
+$('scanRows').onclick = e => { const tr = e.target.closest('tr[data-id]'); if (tr) openScan(window._scans[tr.dataset.id]); };
+function openScan(s) {
+  const a = s.analysis;
+  $('modalBody').innerHTML = `<div style="display:flex;justify-content:space-between"><h3 class="t">Scan ${esc(s.id)}</h3><button class="btn sm" onclick="closeModal()">Close</button></div>
+  <div style="display:grid;grid-template-columns:220px 1fr;gap:14px"><img src="${esc(s.image_url)}" style="width:100%;border-radius:10px">
+  <div><b>${esc(a?.plant_name || 'No analysis')}</b> <span class="pill ${s.status === 'ok' ? '' : 'bad'}">${esc(s.status)}</span>
+  <div class="muted">${fmt(s.created_at)} • ${esc(s.engine || '')} • ${s.latency_ms}ms • lang ${esc(s.lang)} • device ${esc(s.device)}</div>
+  ${s.crop_hint ? `<div>Crop hint: ${esc(s.crop_hint)}</div>` : ''}${s.notes ? `<div>Notes: ${esc(s.notes)}</div>` : ''}${s.error ? `<div style="color:#fca5a5">Error: ${esc(s.error)}</div>` : ''}
+  ${a ? `<p>${esc(a.summary)}</p><div>Health <b>${a.health_score}</b> • Water <b>${a.water_composition.hydration_pct}%</b> • N <b>${a.nutrients.nitrogen_pct}</b> P <b>${a.nutrients.phosphorus_pct}</b> K <b>${a.nutrients.potassium_pct}</b> • Confidence <b>${a.confidence}%</b></div>
+  <div class="muted">Maturity: ${esc(a.probable_maturity_window)}</div>${a.danger_alarm ? `<div class="pill bad" style="display:inline-block;margin-top:6px">🚨 ${esc(a.danger_reason)}</div>` : ''}` : ''}
+  </div></div><div style="margin-top:14px"><button class="btn danger" onclick="delScan('${esc(s.id)}')">Delete scan &amp; photo</button></div>`;
+  $('modal').classList.remove('hidden');
+}
+function closeModal() { $('modal').classList.add('hidden'); }
+$('modal').onclick = e => { if (e.target === $('modal')) closeModal(); };
+async function delScan(id) { if (!confirm('Delete this scan and its photo permanently?')) return; await api('/api/admin/scans/' + id, {method: 'DELETE'}); closeModal(); toast('Scan deleted'); loadScans(); }
+
+/* ---------- settings ---------- */
+const FIELDS = {
+  engine: ['ai_provider', 'openai_model', 'gemini_model', 'openai_api_key', 'gemini_api_key'],
+  rules: ['min_health_score', 'min_water_pct', 'min_nitrogen_pct', 'min_phosphorus_pct', 'min_potassium_pct', 'chlorophyll_sensitivity', 'region_context'],
+  access: ['scans_per_ip_per_hour', 'global_scans_per_day', 'max_upload_mb', 'maintenance_mode'],
+  site: ['public_name', 'contact_email', 'announcement']
+};
+async function loadSettings() {
+  const s = await api('/api/admin/settings').catch(e => toast(e.message, true)); if (!s) return;
+  Object.values(FIELDS).flat().forEach(k => { const el = $(k); if (!el || k.endsWith('_api_key')) return; if (el.type === 'checkbox') el.checked = !!s[k]; else el.value = s[k]; });
+  const st = k => s.keys[k].set ? `(set via ${s.keys[k].source}${s.keys[k].tail ? ', …' + s.keys[k].tail : ''})` : '(not set)';
+  $('oaiStatus').textContent = st('openai'); $('gemStatus').textContent = st('gemini');
+}
+document.querySelectorAll('[data-save]').forEach(b => b.onclick = async () => {
+  const body = {};
+  FIELDS[b.dataset.save].forEach(k => { const el = $(k); if (el.type === 'checkbox') body[k] = el.checked; else if (!k.endsWith('_api_key') || el.value.trim()) body[k] = el.value; });
+  try { await api('/api/admin/settings', {method: 'POST', body: JSON.stringify(body)}); ['openai_api_key', 'gemini_api_key'].forEach(k => $(k).value = ''); toast('Saved — live immediately'); loadSettings(); }
+  catch (e) { toast(e.message, true); }
+});
+document.querySelectorAll('[data-clear]').forEach(b => b.onclick = async () => {
+  if (!confirm('Remove the stored ' + b.dataset.clear + ' key?')) return;
+  await api('/api/admin/settings', {method: 'POST', body: JSON.stringify({['clear_' + b.dataset.clear + '_key']: true})}); toast('Key removed'); loadSettings();
+});
+$('testAi').onclick = async () => {
+  $('testOut').textContent = 'Testing…';
+  try { const d = await api('/api/admin/test-ai', {method: 'POST', body: '{}'}); $('testOut').innerHTML = `<span style="color:var(--em)">✅ Connected in ${d.latency_ms} ms</span>`; }
+  catch (e) { $('testOut').innerHTML = `<span style="color:#fca5a5">❌ ${esc(e.message)}</span>`; }
+};
+$('purgeBtn').onclick = async () => { const n = $('purgeDays').value; if (!confirm(`Delete all scans older than ${n} days?`)) return; const d = await api('/api/admin/maintenance', {method: 'POST', body: JSON.stringify({action: 'purge_older_than', days: n})}); toast(`${d.deleted} scans deleted`); };
+$('purgeAll').onclick = async () => { if (!confirm('Delete EVERY scan and photo? This cannot be undone.')) return; if (prompt('Type DELETE to confirm') !== 'DELETE') return; await api('/api/admin/maintenance', {method: 'POST', body: JSON.stringify({action: 'delete_all_scans'})}); toast('All scans deleted'); };
+
+/* ---------- site / feedback / logs / security ---------- */
+function loadSite() { $('qrImg').src = '/api/admin/qr.svg?t=' + Date.now(); $('siteUrl').textContent = location.origin + '/'; }
+$('copyUrl').onclick = () => navigator.clipboard.writeText(location.origin + '/').then(() => toast('Link copied'));
+async function loadFeedback() {
+  const l = await api('/api/admin/feedback').catch(e => toast(e.message, true)); if (!l) return;
+  $('fbList').innerHTML = l.length ? `<table><tr><th></th><th>When</th><th>Crop</th><th>Vote</th><th>Comment</th></tr>${l.map(f => `<tr><td>${f.image_url ? `<img src="${esc(f.image_url)}">` : ''}</td><td>${fmt(f.created_at)}</td><td>${esc(f.plant || '—')}</td><td>${f.helpful ? '👍' : '👎'}</td><td>${esc(f.comment)}</td></tr>`).join('')}</table>` : 'No feedback yet.';
+}
+async function loadLogs() {
+  const l = await api('/api/admin/logs').catch(e => toast(e.message, true)); if (!l) return;
+  $('logBox').innerHTML = l.map(x => `<div><span class="muted">${fmt(x.ts)}</span> <b style="color:${x.level === 'ERROR' ? '#ef4444' : x.level === 'WARN' ? '#f59e0b' : '#10b981'}">${esc(x.level)}</b> [${esc(x.source)}] ${esc(x.message)}</div>`).join('') || 'No log entries.';
+}
+$('refLogs').onclick = loadLogs;
+$('clrLogs').onclick = async () => { await api('/api/admin/maintenance', {method: 'POST', body: JSON.stringify({action: 'clear_logs'})}); loadLogs(); };
+$('chgPw').onclick = async () => {
+  try { await api('/api/admin/password', {method: 'POST', body: JSON.stringify({current: $('curPw').value, new: $('newPw').value})}); $('curPw').value = $('newPw').value = ''; toast('Password updated'); }
+  catch (e) { toast(e.message, true); }
+};
+boot();
+</script>
+</body>
+</html>

@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>FieldLens Pro AI — Instant crop health scan from your phone</title>
+<meta name="description" content="Point your phone at any crop. Get an instant AI diagnosis of plant health, nutrients, water, pests and harvest timing. Free, works anywhere with internet." />
+<meta name="theme-color" content="#10b981" />
+<link rel="manifest" href="/manifest.webmanifest" />
+<link rel="icon" href="/static/icon-192.png" />
+<link rel="apple-touch-icon" href="/static/icon-192.png" />
+<style>
+:root{--bg:#07110d;--panel:#0d1c16;--panel2:#12261e;--border:#1e3b2f;--text:#eaf5ef;--muted:#8aa698;--em:#10b981;--lime:#a3e635;--cyan:#22d3ee;--amber:#f59e0b;--red:#ef4444}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;padding-bottom:env(safe-area-inset-bottom)}
+header{position:sticky;top:0;z-index:40;background:rgba(7,17,13,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:10px 16px;padding-top:calc(10px + env(safe-area-inset-top));display:flex;align-items:center;justify-content:space-between;gap:10px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;letter-spacing:-.3px}
+.brand .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--em),var(--lime));display:grid;place-items:center;font-size:18px}
+.brand span span{color:var(--lime)}
+nav{display:flex;gap:6px;align-items:center}
+nav a,nav button{color:var(--muted);text-decoration:none;font-size:13px;font-weight:700;padding:7px 10px;border-radius:8px;background:none;border:0;cursor:pointer}
+nav a:hover,nav button:hover{color:var(--lime)}
+#installBtn{display:none;background:var(--em);color:#03150c}
+#announce{display:none;background:#1f2a12;border-bottom:1px solid #3a4d1c;color:#e4f5b8;padding:9px 16px;text-align:center;font-size:13px}
+#alarmBanner{display:none;position:sticky;top:55px;z-index:35;background:linear-gradient(90deg,#7f1d1d,#b91c1c);color:#fff;padding:12px 16px;gap:12px;align-items:center;justify-content:space-between}
+#alarmBanner.show{display:flex}
+main{max-width:1060px;margin:0 auto;padding:18px 16px 40px}
+.hero{padding:26px 0 18px;text-align:center}
+.hero h1{margin:0 0 10px;font-size:clamp(28px,6vw,46px);line-height:1.1;letter-spacing:-1px}
+.hero h1 em{font-style:normal;color:var(--lime)}
+.hero p{margin:0 auto;max-width:560px;color:var(--muted);font-size:16px}
+.badges{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px}
+.badge{font-size:12px;font-weight:700;color:var(--em);border:1px solid rgba(16,185,129,.35);background:rgba(16,185,129,.1);padding:4px 10px;border-radius:999px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:18px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.card+.card{margin-top:16px}
+.title{margin:0 0 12px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.9px;color:var(--lime)}
+.stage{position:relative;aspect-ratio:4/3;max-height:420px;width:100%;background:#020604;border:2px solid var(--em);border-radius:16px;overflow:hidden;display:grid;place-items:center;box-shadow:0 0 28px rgba(16,185,129,.18)}
+.stage video,.stage img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.stage .ph{text-align:center;color:var(--muted);padding:20px}
+.stage .ph b{display:block;font-size:40px;margin-bottom:6px}
+.reticle{position:absolute;inset:16px;border:1px dashed rgba(163,230,53,.45);border-radius:12px;pointer-events:none}
+.laser{position:absolute;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--lime),var(--cyan),var(--lime),transparent);box-shadow:0 0 14px var(--lime);animation:sweep 1.8s ease-in-out infinite alternate;display:none}
+.stage.busy .laser{display:block}
+@keyframes sweep{from{top:6%}to{top:92%}}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--panel2);color:var(--text);font-weight:800;font-size:14px;cursor:pointer;flex:1;min-width:140px;text-decoration:none}
+.btn:hover{border-color:var(--lime)}
+.btn.primary{background:linear-gradient(135deg,var(--em),var(--lime));color:#03150c;border:0;font-size:16px;padding:15px;box-shadow:0 6px 20px rgba(16,185,129,.3)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+label{display:block;font-size:12px;color:var(--muted);font-weight:700;margin-top:12px}
+input,select,textarea{width:100%;margin-top:5px;background:#07120e;color:var(--text);border:1px solid var(--border);border-radius:10px;padding:11px;font:inherit}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:560px){.grid2{grid-template-columns:1fr}}
+#err{display:none;margin-top:12px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.45);color:#fecaca;padding:11px 13px;border-radius:10px;font-size:14px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+@media(max-width:760px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:12px}
+.kpi span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+.kpi strong{display:block;font-size:17px;margin-top:3px;word-break:break-word}
+.diag{display:grid;grid-template-columns:280px 1fr;gap:16px}
+@media(max-width:860px){.diag{grid-template-columns:1fr}}
+.scanimg{width:100%;height:230px;object-fit:cover;border-radius:12px;border:1px solid var(--border)}
+.anat{background:#081410;border:1px solid var(--border);border-radius:12px;padding:12px;margin-top:12px;text-align:center}
+.blk{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px}
+.blk h4{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--cyan)}
+.bar{margin-bottom:9px}.bar .h{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+.track{height:8px;background:#060e0a;border:1px solid var(--border);border-radius:99px;overflow:hidden}
+.fill{height:100%;border-radius:99px;transition:width .6s}
+.rx{padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.03);border-left:3px solid var(--em);margin-bottom:8px;font-size:13px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:700px){.two{grid-template-columns:1fr}}
+.maturity{background:rgba(163,230,53,.08);border:1px solid rgba(163,230,53,.25);padding:10px;border-radius:8px;margin-top:8px}
+.hist{display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--border);border-radius:12px;background:var(--panel2);margin-top:8px;cursor:pointer}
+.hist:hover{border-color:var(--em)}
+.hist img{width:52px;height:52px;border-radius:9px;object-fit:cover}
+.pill{font-size:11px;font-weight:800;padding:4px 9px;border-radius:99px;background:rgba(16,185,129,.14);color:var(--em);border:1px solid rgba(16,185,129,.3);white-space:nowrap}
+.pill.bad{background:rgba(239,68,68,.14);color:#fca5a5;border-color:rgba(239,68,68,.4)}
+.muted{color:var(--muted)}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:700px){.steps{grid-template-columns:1fr}}
+.step{background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:14px}
+.step b{display:block;font-size:26px;margin-bottom:4px}
+.hidden{display:none!important}
+.disc{font-size:12px;color:var(--muted);margin-top:14px;border-top:1px solid var(--border);padding-top:12px}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:24px 16px 40px}
+.fb button{flex:0;min-width:0;padding:8px 14px}
+</style>
+</head>
+<body>
+<div id="announce"></div>
+<header>
+  <div class="brand"><div class="logo">🌿</div><span>Field<span>Lens</span> Pro</span></div>
+  <nav>
+    <button id="installBtn">Install app</button>
+    <a href="#scanner">Scan</a><a href="#history">My scans</a><a href="#about">How it works</a>
+  </nav>
+</header>
+<div id="alarmBanner">
+  <div><strong>🚨 HIGH-RISK CROP ALERT</strong><div id="alarmText" style="font-size:13px"></div></div>
+  <button class="btn" style="flex:0;min-width:0;background:#fff;color:#7f1d1d;border:0" onclick="document.getElementById('alarmBanner').classList.remove('show')">Got it</button>
+</div>
+
+<main>
+  <section class="hero">
+    <h1>Point. Scan. <em>Know your crop.</em></h1>
+    <p>Take a photo of any plant and get an instant diagnosis — health, nutrients, water, pests, what to apply, and how long until harvest.</p>
+    <div class="badges"><span class="badge">Free to use</span><span class="badge">Works on any phone</span><span class="badge">English • Kinyarwanda • Français • Kiswahili</span></div>
+  </section>
+
+  <section id="scanner" class="card">
+    <h3 class="title">📷 Scan a plant</h3>
+    <div class="stage" id="stage">
+      <div class="ph" id="stagePh"><b>🌱</b>Open your camera or choose a photo of a leaf or whole plant.<br><span style="font-size:12px">Tip: good daylight, fill the frame, hold steady.</span></div>
+      <video id="video" playsinline muted class="hidden"></video>
+      <img id="preview" alt="Plant preview" class="hidden" />
+      <div class="reticle"></div><div class="laser"></div>
+    </div>
+    <div class="row" id="srcRow">
+      <button class="btn" id="camBtn">📷 Open camera</button>
+      <button class="btn" id="pickBtn">🖼️ Choose photo</button>
+    </div>
+    <div class="row hidden" id="capRow">
+      <button class="btn primary" id="snapBtn">⭕ Capture</button>
+      <button class="btn" id="camCancel">Cancel</button>
+    </div>
+    <input type="file" id="file" accept="image/*" class="hidden" />
+
+    <div class="grid2">
+      <div><label for="crop">Crop (optional)</label>
+        <input id="crop" list="crops" maxlength="80" placeholder="e.g. Maize, Beans, Tomato — or leave blank" />
+        <datalist id="crops"><option>Maize</option><option>Beans</option><option>Irish potato</option><option>Sweet potato</option><option>Cassava</option><option>Banana</option><option>Tomato</option><option>Coffee</option><option>Tea</option><option>Rice</option><option>Sorghum</option><option>Wheat</option><option>Soybean</option><option>Cabbage</option><option>Onion</option><option>Pepper</option><option>Avocado</option><option>Passion fruit</option><option>Pineapple</option><option>Sunflower</option></datalist></div>
+      <div><label for="lang">Language of advice</label><select id="lang"></select></div>
+    </div>
+    <label for="notes">What have you noticed? (optional)</label>
+    <input id="notes" maxlength="400" placeholder="e.g. yellow lower leaves, holes in leaves, it rained a lot" />
+    <div class="row"><button class="btn primary" id="analyzeBtn" disabled>🔬 Analyze plant</button></div>
+    <div id="err"></div>
+  </section>
+
+  <section id="result" class="card hidden">
+    <h3 class="title">🔬 Diagnosis <span id="resMeta" class="muted" style="float:right;text-transform:none;letter-spacing:0;font-weight:600"></span></h3>
+    <div class="kpis">
+      <div class="kpi"><span>Crop</span><strong id="kCrop"></strong></div>
+      <div class="kpi"><span>Age • stage</span><strong id="kAge"></strong></div>
+      <div class="kpi"><span>Health score</span><strong id="kHealth"></strong></div>
+      <div class="kpi"><span>Water</span><strong id="kWater"></strong></div>
+    </div>
+    <div class="diag">
+      <div>
+        <img id="resImg" class="scanimg" alt="Scanned plant" />
+        <div class="anat">
+          <div style="font-size:11px;font-weight:800;color:var(--lime);letter-spacing:.8px;margin-bottom:6px">PLANT RISK MAP</div>
+          <svg viewBox="0 0 200 220" width="150" height="165" style="display:block;margin:0 auto">
+            <line x1="20" y1="175" x2="180" y2="175" stroke="#334155" stroke-width="2" stroke-dasharray="4 3"/>
+            <g id="z_roots"><path d="M100 175 C90 190,75 200,65 210 M100 175 C100 195,100 205,100 215 M100 175 C112 190,125 200,138 210" stroke="#10b981" stroke-width="4" fill="none" stroke-linecap="round"/></g>
+            <g id="z_stem"><rect x="95" y="55" width="10" height="120" rx="4" fill="#10b981"/></g>
+            <g id="z_lower_leaves"><path d="M95 140 C60 130,35 145,25 160 C50 162,75 155,95 148Z" fill="#10b981"/><path d="M105 140 C140 130,165 145,175 160 C150 162,125 155,105 148Z" fill="#10b981"/></g>
+            <g id="z_upper_canopy"><path d="M95 95 C55 75,30 90,22 108 C52 112,75 105,95 102Z" fill="#10b981"/><path d="M105 95 C145 75,170 90,178 108 C148 112,125 105,105 102Z" fill="#10b981"/><path d="M100 55 C82 30,92 15,100 10 C108 15,118 30,100 55Z" fill="#10b981"/></g>
+            <g id="z_fruit"><circle cx="82" cy="118" r="10" fill="#10b981"/><circle cx="118" cy="118" r="10" fill="#10b981"/></g>
+          </svg>
+          <div id="zLabel" style="font-size:12px;font-weight:800;margin-top:4px"></div>
+          <div id="zDetail" class="muted" style="font-size:12px"></div>
+        </div>
+      </div>
+      <div>
+        <div class="blk"><h4>Summary &amp; harvest forecast</h4>
+          <p id="summary" style="margin:0"></p>
+          <div class="maturity"><strong style="color:var(--lime);font-size:12px">⏳ TIME TO MATURITY:</strong> <b id="mWin"></b><div id="mWhy" class="muted" style="font-size:12px;margin-top:3px"></div></div>
+        </div>
+        <div class="blk"><h4>Nutrients &amp; water</h4><div id="bars"></div>
+          <div id="water" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:13px"></div></div>
+        <div class="two">
+          <div class="blk" style="margin:0"><h4>🧪 Fertilizer &amp; manure</h4><div id="ferts"></div></div>
+          <div class="blk" style="margin:0"><h4>🐛 Pests &amp; protection</h4><div id="pests"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="row fb" style="align-items:center">
+      <span class="muted" style="font-size:13px">Was this helpful?</span>
+      <button class="btn" id="fbUp">👍</button><button class="btn" id="fbDown">👎</button>
+      <button class="btn" id="shareBtn" style="margin-left:auto">🔗 Share result</button>
+      <span id="fbDone" class="muted hidden" style="font-size:13px">Thank you!</span>
+    </div>
+    <div class="disc">⚠️ FieldLens gives AI-based visual estimates, not laboratory results. Confidence: <b id="conf"></b>%. For serious problems, confirm with your local agronomist or extension officer. Always read the product label and wear protective gear when handling any chemical.</div>
+  </section>
+
+  <section id="history" class="card">
+    <h3 class="title">📜 My recent scans <span class="muted" style="font-weight:600;text-transform:none;letter-spacing:0">(saved on this device)</span></h3>
+    <div id="histList" class="muted">No scans yet — your results will appear here.</div>
+  </section>
+
+  <section id="about" class="card">
+    <h3 class="title">How it works</h3>
+    <div class="steps">
+      <div class="step"><b>📸</b><strong>1. Take a photo</strong><div class="muted">Open the camera or upload one. Fill the frame with the leaf or plant.</div></div>
+      <div class="step"><b>🧠</b><strong>2. AI reads the plant</strong><div class="muted">Colour, texture, leaf shape and damage patterns are analysed in seconds.</div></div>
+      <div class="step"><b>✅</b><strong>3. Act on the advice</strong><div class="muted">Get dosage, timing, water and pest guidance — in your language.</div></div>
+    </div>
+  </section>
+</main>
+<footer>
+  <div id="footName">FieldLens Pro AI</div>
+  <div>Photos you scan are stored to improve the service. <span id="footContact"></span></div>
+</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const store = {
+  get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+let clientId = store.get('fl_client', null);
+if (!clientId) { clientId = crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2); store.set('fl_client', clientId); }
+
+let blob = null, stream = null, current = null, config = {max_mb: 10};
+
+/* ---------- config ---------- */
+async function loadConfig() {
+  try {
+    config = await (await fetch('/api/public-config')).json();
+    document.title = config.name + ' — Instant crop health scan from your phone';
+    $('footName').textContent = config.name;
+    if (config.contact) $('footContact').textContent = 'Contact: ' + config.contact;
+    if (config.announcement) { $('announce').textContent = config.announcement; $('announce').style.display = 'block'; }
+    if (config.maintenance) showErr('FieldLens is briefly under maintenance. Please check back soon.');
+    else if (!config.ai_ready) showErr('The diagnosis engine is not available right now. Please try again later.');
+    const sel = $('lang');
+    Object.entries(config.languages || {en: 'English'}).forEach(([k, v]) => sel.add(new Option(v, k)));
+    sel.value = store.get('fl_lang', 'en'); if (!sel.value) sel.value = 'en';
+  } catch { showErr('You appear to be offline. Connect to the internet to scan.'); }
+}
+$('lang').addEventListener('change', e => store.set('fl_lang', e.target.value));
+
+function showErr(m) { const e = $('err'); e.textContent = m; e.style.display = m ? 'block' : 'none'; }
+
+/* ---------- camera / file ---------- */
+function setPreview(b) {
+  blob = b;
+  const img = $('preview'); img.src = URL.createObjectURL(b);
+  img.classList.remove('hidden'); $('stagePh').classList.add('hidden'); $('video').classList.add('hidden');
+  $('analyzeBtn').disabled = false; showErr('');
+}
+function stopCam() {
+  if (stream) stream.getTracks().forEach(t => t.stop());
+  stream = null; $('video').classList.add('hidden'); $('capRow').classList.add('hidden'); $('srcRow').classList.remove('hidden');
+  if (!blob) $('stagePh').classList.remove('hidden'); else $('preview').classList.remove('hidden');
+}
+$('camBtn').onclick = async () => {
+  showErr('');
+  if (!navigator.mediaDevices?.getUserMedia) { $('file').setAttribute('capture', 'environment'); $('file').click(); return; }
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: {ideal: 'environment'}, width: {ideal: 1920}}, audio: false});
+    const v = $('video'); v.srcObject = stream; await v.play();
+    v.classList.remove('hidden'); $('stagePh').classList.add('hidden'); $('preview').classList.add('hidden');
+    $('srcRow').classList.add('hidden'); $('capRow').classList.remove('hidden');
+  } catch {
+    showErr('Camera access was blocked. Allow the camera in your browser, or use “Choose photo” instead.');
+  }
+};
+$('camCancel').onclick = stopCam;
+$('snapBtn').onclick = () => {
+  const v = $('video'), c = document.createElement('canvas');
+  const s = Math.min(1, 1280 / Math.max(v.videoWidth, v.videoHeight));
+  c.width = Math.round(v.videoWidth * s); c.height = Math.round(v.videoHeight * s);
+  c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+  c.toBlob(b => { stopCam(); setPreview(b); }, 'image/jpeg', 0.85);
+};
+$('pickBtn').onclick = () => { $('file').removeAttribute('capture'); $('file').click(); };
+$('file').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  setPreview(await shrink(f)); e.target.value = '';
+};
+async function shrink(file) {              // saves mobile data: max 1280px JPEG before upload
+  try {
+    const bmp = await createImageBitmap(file, {imageOrientation: 'from-image'});
+    const s = Math.min(1, 1280 / Math.max(bmp.width, bmp.height));
+    const c = document.createElement('canvas'); c.width = Math.round(bmp.width * s); c.height = Math.round(bmp.height * s);
+    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+    return await new Promise(r => c.toBlob(r, 'image/jpeg', 0.85));
+  } catch { return file; }
+}
+
+/* ---------- analyze ---------- */
+$('analyzeBtn').onclick = async () => {
+  if (!blob) return;
+  showErr(''); $('analyzeBtn').disabled = true; $('analyzeBtn').textContent = '🔬 Analyzing…'; $('stage').classList.add('busy');
+  const fd = new FormData();
+  fd.append('photo', blob, 'scan.jpg'); fd.append('crop', $('crop').value); fd.append('notes', $('notes').value);
+  fd.append('lang', $('lang').value); fd.append('client_id', clientId);
+  try {
+    const res = await fetch('/api/scan', {method: 'POST', body: fd});
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
+    const ids = store.get('fl_ids', []).filter(i => i !== data.record.id); ids.unshift(data.record.id); store.set('fl_ids', ids.slice(0, 40));
+    render(data.record, true); loadHistory();
+    $('result').scrollIntoView({behavior: 'smooth', block: 'start'});
+  } catch (e) {
+    showErr(navigator.onLine ? e.message : 'You appear to be offline. Connect to the internet and try again.');
+  } finally {
+    $('analyzeBtn').disabled = false; $('analyzeBtn').textContent = '🔬 Analyze plant'; $('stage').classList.remove('busy');
+  }
+};
+
+/* ---------- render ---------- */
+function beep() {
+  try { const c = new (window.AudioContext || window.webkitAudioContext)(), o = c.createOscillator(), g = c.createGain();
+    o.type = 'sawtooth'; o.frequency.setValueAtTime(680, c.currentTime); o.frequency.exponentialRampToValueAtTime(420, c.currentTime + .35);
+    g.gain.setValueAtTime(.12, c.currentTime); g.gain.exponentialRampToValueAtTime(.001, c.currentTime + .4);
+    o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime + .4); } catch {}
+}
+function render(rec, fresh) {
+  current = rec; const a = rec.analysis; if (!a) return;
+  $('result').classList.remove('hidden');
+  $('kCrop').textContent = a.plant_name;
+  $('kAge').textContent = `${a.estimated_age_days} d • ${a.crop_stage}`;
+  $('kHealth').textContent = `${a.health_score}/100`;
+  $('kWater').textContent = `${a.water_composition.hydration_pct}% ${a.water_composition.turgor_status}`;
+  $('resMeta').textContent = new Date(rec.created_at * 1000).toLocaleString() + ' • ' + (a.engine || '');
+  $('resImg').src = rec.image_url;
+  $('summary').textContent = a.summary; $('mWin').textContent = a.probable_maturity_window; $('mWhy').textContent = a.maturity_drivers;
+  $('conf').textContent = a.confidence;
+  ['roots', 'stem', 'lower_leaves', 'upper_canopy', 'fruit'].forEach(z => {
+    const hit = z === a.endangered_zone, col = hit ? '#ef4444' : '#10b981', g = $('z_' + z);
+    g.setAttribute('opacity', hit ? 1 : .45);
+    g.querySelectorAll('path,rect,circle').forEach(s => { if (s.getAttribute('stroke')) s.setAttribute('stroke', col); if (s.getAttribute('fill') && s.getAttribute('fill') !== 'none') s.setAttribute('fill', col); });
+  });
+  const zl = $('zLabel');
+  if (a.endangered_zone !== 'none') { zl.style.color = '#ef4444'; zl.textContent = '⚠️ DANGER ZONE: ' + a.endangered_zone.replace('_', ' ').toUpperCase(); }
+  else { zl.style.color = '#10b981'; zl.textContent = '✅ All zones healthy'; }
+  $('zDetail').textContent = a.endangered_zone_detail;
+  const n = a.nutrients;
+  $('bars').innerHTML = [['Nitrogen (N)', n.nitrogen_pct], ['Phosphorus (P)', n.phosphorus_pct], ['Potassium (K)', n.potassium_pct], ['Magnesium (Mg)', n.magnesium_pct], ['Iron (Fe)', n.iron_pct]]
+    .map(([l, v]) => { const c = v < 40 ? '#ef4444' : v < 65 ? '#f59e0b' : '#10b981';
+      return `<div class="bar"><div class="h"><span>${l}</span><b style="color:${c}">${v}%</b></div><div class="track"><div class="fill" style="width:${v}%;background:${c}"></div></div></div>`; }).join('')
+    + `<div class="muted" style="font-size:12px">${esc(n.status_summary)}</div>`;
+  $('water').innerHTML = '💧 <b>Water:</b> ' + esc(a.water_composition.recommendation);
+  $('ferts').innerHTML = a.fertilizer_and_manure.length ? a.fertilizer_and_manure.map(f =>
+    `<div class="rx"><b>${esc(f.type)}</b><br><span style="color:var(--lime)">Dosage:</span> ${esc(f.dosage)}<br><span class="muted" style="font-size:12px">${esc(f.timing)}</span></div>`).join('')
+    : '<div class="muted" style="font-size:13px">No fertilizer change needed.</div>';
+  $('pests').innerHTML = a.pests_and_insects.length ? a.pests_and_insects.map(p =>
+    `<div class="rx" style="border-left-color:${p.severity === 'High' ? '#ef4444' : '#f59e0b'}"><b>${esc(p.name)}</b> (${esc(p.severity)})<br><span class="muted" style="font-size:12px">${esc(p.insecticide_or_ipm)}</span></div>`).join('')
+    : '<div class="muted" style="font-size:13px">No pests detected.</div>';
+  $('fbDone').classList.add('hidden'); $('fbUp').disabled = $('fbDown').disabled = false;
+  if (a.danger_alarm) { $('alarmText').textContent = a.danger_reason || 'High-risk crop stress detected.'; $('alarmBanner').classList.add('show'); if (fresh) { beep(); navigator.vibrate?.([200, 100, 200]); } }
+  else $('alarmBanner').classList.remove('show');
+  history.replaceState(null, '', '/r/' + rec.id);
+}
+
+/* ---------- history, feedback, share ---------- */
+async function loadHistory() {
+  const ids = store.get('fl_ids', []); if (!ids.length) return;
+  try {
+    const list = await (await fetch('/api/scans?ids=' + ids.join(','))).json();
+    $('histList').innerHTML = list.map(r => `<div class="hist" data-id="${esc(r.id)}"><img src="${esc(r.image_url)}" alt=""><div style="flex:1"><strong>${esc(r.analysis?.plant_name)}</strong><div class="muted" style="font-size:12px">${new Date(r.created_at * 1000).toLocaleString()} • Health ${r.analysis?.health_score}%</div></div><span class="pill ${r.analysis?.danger_alarm ? 'bad' : ''}">${r.analysis?.danger_alarm ? '🚨 DANGER' : 'OK'}</span></div>`).join('') || 'No scans yet.';
+    window._hist = Object.fromEntries(list.map(r => [r.id, r]));
+  } catch {}
+}
+$('histList').onclick = e => { const el = e.target.closest('.hist'); if (el && window._hist?.[el.dataset.id]) { render(window._hist[el.dataset.id], false); $('result').scrollIntoView({behavior: 'smooth'}); } };
+async function sendFb(h) {
+  if (!current) return;
+  await fetch('/api/feedback', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({scan_id: current.id, helpful: h})});
+  $('fbUp').disabled = $('fbDown').disabled = true; $('fbDone').classList.remove('hidden');
+}
+$('fbUp').onclick = () => sendFb(true); $('fbDown').onclick = () => sendFb(false);
+$('shareBtn').onclick = async () => {
+  const url = location.origin + '/r/' + current.id, title = 'FieldLens scan: ' + current.analysis.plant_name;
+  if (navigator.share) { try { await navigator.share({title, url}); return; } catch {} }
+  try { await navigator.clipboard.writeText(url); $('shareBtn').textContent = '✅ Link copied'; } catch { prompt('Copy this link', url); }
+};
+
+/* ---------- install + service worker ---------- */
+let deferred; addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; $('installBtn').style.display = 'inline-block'; });
+$('installBtn').onclick = async () => { if (deferred) { deferred.prompt(); deferred = null; $('installBtn').style.display = 'none'; } };
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+
+/* ---------- boot ---------- */
+(async () => {
+  await loadConfig(); await loadHistory();
+  const m = location.pathname.match(/^\/r\/([0-9a-f]{16})$/);
+  if (m) { try { const d = await (await fetch('/api/scan/' + m[1])).json(); if (d.ok) { render(d.record, false); $('result').scrollIntoView(); } } catch {} }
+})();
+</script>
+</body>
+</html>

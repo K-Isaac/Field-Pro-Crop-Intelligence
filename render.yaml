@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: fieldlens-pro
+    runtime: docker
+    plan: starter            # a persistent disk needs a paid instance
+    healthCheckPath: /healthz
+    envVars:
+      - key: FL_ENV
+        value: production
+      - key: DATA_DIR
+        value: /data
+      - key: ADMIN_PASSWORD
+        generateValue: true  # read it in the Render dashboard after first deploy
+      - key: SECRET_KEY
+        generateValue: true
+      - key: OPENAI_API_KEY
+        sync: false          # you paste it in the dashboard; it never touches the repo
+    disk:
+      name: fieldlens-data
+      mountPath: /data
+      sizeGB: 5
